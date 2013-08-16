@@ -121,10 +121,6 @@ static int mipi_dsi_off(struct platform_device *pdev)
 	ret = panel_next_off(pdev);
 #endif
 
-#ifdef CONFIG_MSM_BUS_SCALING
-	mdp_bus_scale_update_request(0);
-#endif
-
 	mipi_dsi_clk_disable();
 
 	/* disbale dsi engine */
@@ -353,10 +349,6 @@ static int mipi_dsi_on(struct platform_device *pdev)
 		mipi_dsi_unprepare_clocks();
 	}
 
-#ifdef CONFIG_MSM_BUS_SCALING
-	mdp_bus_scale_update_request(2);
-#endif
-
 	if (mdp_rev >= MDP_REV_41)
 		mutex_unlock(&mfd->dma->ov_mutex);
 	else
@@ -366,6 +358,11 @@ static int mipi_dsi_on(struct platform_device *pdev)
 	printk(KERN_INFO"%s is ended.. \n", __func__);
 
 	return ret;
+}
+
+static int mipi_dsi_late_init(struct platform_device *pdev)
+{
+	return panel_next_late_init(pdev);
 }
 
 
@@ -512,6 +509,7 @@ static int mipi_dsi_probe(struct platform_device *pdev)
 	pdata = mdp_dev->dev.platform_data;
 	pdata->on = mipi_dsi_on;
 	pdata->off = mipi_dsi_off;
+	pdata->late_init = mipi_dsi_late_init;
 	pdata->next = pdev;
 
 	/*
